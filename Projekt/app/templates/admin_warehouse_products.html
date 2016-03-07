@@ -1,0 +1,36 @@
+$def with (warehouse_products)
+$var id: admin_warehouse_products
+$var title: Magazyny -
+<table class="table table-striped table-bordered">
+<thead>
+    <tr>
+        <th>#</th>
+        <th>Użytkownik</th>
+        <th>Nazwa produktu</th>
+        <th>Komentarz</th>
+        <th>Ilość</th>
+        <th>Cena</th>
+        <th>Źródło</th>
+        <th></th>
+    </tr>
+</thead>
+<tbody>
+$for warehouse_product in warehouse_products:
+    <tr>
+        <td>$warehouse_product.warehouse_product_id</td>
+        <td>$warehouse_product.nick</td>
+        <td>$warehouse_product.product_name</td>
+        <td>$warehouse_product.comment</td>
+        <td>$warehouse_product.count</td>
+        <td>$warehouse_product.price</td>
+        <td>${warehouse_product.placement_id and 'uprawa ' + warehouse_product.placement_name or 'sklep ' + warehouse_product.shop_name_address}</td>
+        <td>
+            <form method="POST" action="$get_url('admin_warehouse_product_view', warehouse_product.warehouse_product_id)" class="form-inline">
+                <input type="hidden" name="token" value="$session.token" />
+                <a href="$get_url('admin_warehouse_product_view', warehouse_product.warehouse_product_id)" class="btn btn-xs btn-info external" title="Edytuj"><span class="glyphicon glyphicon-pencil"></span></a>
+                <button type="submit" name="action" value="remove" class="btn btn-xs btn-danger" title="Usuń"><span class="glyphicon glyphicon-remove"></span></button>
+            </form>
+        </td>
+    </tr>
+</tbody>
+</table>

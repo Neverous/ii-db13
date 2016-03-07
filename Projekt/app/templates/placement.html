@@ -1,0 +1,195 @@
+$def with (products, placement_products, placement_events, placement_id, placement_name, plant_name, placement_comment, placement_date, placement_finish_date, product_id=None, product_name=None, product_count=None, event_from_date=None, event_to_date=None, event_end_date=None, event_name=None, event_description=None, event_frequency=0)
+$var id: garden
+$var title: $placement_name - Uprawa -
+$code:
+    processed_products = {}
+    for product in placement_products:
+        if product.name not in processed_products:
+            processed_products[product.name] = []
+
+        processed_products[product.name].append((
+            int(time.mktime(product.production_date.timetuple()) * 1000),
+            product.count
+        ))
+
+<div class="container">
+    <header class="page-header">
+        $if not placement_finish_date:
+            <form action="" method="POST" class="form-inline">
+                <input type="hidden" name="action" value="finish" />
+                <input type="hidden" name="token" value="$session.token" />
+                <button type="submit" class="pull-right btn btn-sm btn-danger">Zakończ uprawę</button>
+            </form>
+
+        $else:
+            <div class="pull-right"><em>Uprawa zakończona: $placement_finish_date.date()</em></div>
+
+        <h1>$placement_name - Uprawa</h1>
+    </header>
+    <section class="row">
+        <article class="col-sm-6">
+            <header>
+                <h3>$plant_name</h3>
+                <em>
+                    Od $placement_date.strftime('%Y-%m-%d %H:%M')
+                    $if placement_finish_date:
+                        do $placement_finish_date.strftime('%Y-%m-%d %H:%M')
+                </em>
+            </header>
+            <form action="" method="POST" class="form-inline">
+                <input type="hidden" name="action" value="edit" />
+                <input type="hidden" name="token" value="$session.token" />
+                <textarea name="placement_comment" style="width: 100%;">$placement_comment</textarea>
+                <button type="submit" class="btn btn-success btn-sm pull-right" title="Edytuj">Edytuj</button>
+            </form>
+            <p><br /></p>
+            <footer>
+            </footer>
+        </article>
+        <article class="col-sm-6">
+            <div id="graph" style="width: 100%; height: 200px;">&nbsp;</div>
+            <script>
+                var graph = $$('#graph');
+                graph.width(graph.width());
+                graph.height(graph.height());
+
+                $$.plot(
+                    graph,
+                    [
+                    $for name, points in processed_products.items():
+                        {
+                            label: '$name',
+                            data:
+                            [
+                            $for tm, cnt in points:
+                                [$tm, $cnt],
+                            ]
+                        },
+                    ],
+                    {
+                        grid: {
+                            clickable: false,
+                            borderWidth: 1,
+                            borderColor: "#333",
+                            color: "#333",
+                            backgroundColor: "#FFF",
+                            tickColor: "#E6E6E6",
+                        },
+                        legend: {
+                            position: 'nw',
+                            noColumns: 1,
+                            toggle: true,
+                        },
+                        series: {
+                            hoverable: true,
+                            stack: false,
+                            outline: false,
+                            points: { show: true },
+                            lines: {
+                                show: true,
+                                steps: false,
+                                shadowSize: 0,
+                                lineWidth: 1,
+                            },
+                            shadowSize: 0,
+                        },
+                        xaxis: {
+                            mode: "time",
+                        },
+                        yaxis: {
+                            si: true,
+                        },
+                    }
+                    );
+            </script>
+        $if not placement_finish_date:
+            <div>
+                <form action="" method="POST" class="form-inline">
+                    <input type="hidden" name="action" value="produce" />
+                    <input type="hidden" name="token" value="$session.token" />
+                    <input name="product_id" type="hidden" id="product_id" value="$product_id" />
+                    <input name="product_name" type="text" class="form-control input-sm" id="product_name" placeholder="Nazwa produktu" value="$product_name" required="required" />
+                    <script>
+                        var product_id      = $$('#product_id');
+                        var product_name    = $$('#product_name');
+                        product_name.autocomplete({
+                            source: [
+                                $for product in products:
+                                    {label: '$product.name', value: '$product.product_id'},
+                            ],
+
+                            select: function(ev, ui)
+                            {
+                                ev.preventDefault();
+                                product_id.val(ui.item.value);
+                                product_name.val(ui.item.label);
+                            },
+
+                            focus: function(ev, ui)
+                            {
+                                ev.preventDefault();
+                                product_id.val(ui.item.value);
+                                product_name.val(ui.item.label);
+                            }
+                        });
+                    </script>
+                    <input type="number" name="product_count" title="Ilość" value="$product_count" class="form-control input-sm" required="required" />
+                    <button type="submit" class="btn btn-primary btn-sm" title="Dodaj"><span class="glyphicon glyphicon-plus"></span></button>
+                </form>
+            </div>
+        </article>
+    </section>
+    <h4>Zabiegi</h4>
+    <table class="table table-hover table-condensed" id="events">
+        <thead>
+            <tr>
+                <th style="width: 50px;">#</th>
+                <th>Nazwa</th>
+                <th>Opis</th>
+                <th>Termin</th>
+            </tr>
+        </thead>
+<tbody>
+$if not placement_finish_date:
+    <tr>
+        <td colspan="4">
+            <form action="" method="POST" class="form-inline">
+                <input type="hidden" name="action" value="add_event" />
+                <input type="hidden" name="token" value="$session.token" />
+                <input type="text" name="event_name" value="$event_name" placeholder="Nazwa zabiegu" class="form-control input-sm" required="required" />
+                <input type="text" name="event_description" value="$event_description" placeholder="Opis" class="form-control input-sm" required="required" />
+                <input type="datetime-local" name="event_from_date" title="Od" value="$event_from_date" class="form-control input-sm" required="required" />
+                <input type="datetime-local" name="event_to_date" title="Do" value="$event_to_date" class="form-control input-sm" required="required" />
+                <input type="number" name="event_frequency" title="Powtarzaj" value="$event_frequency" class="form-control input-sm" style="width: 50px;" required="required" id="event_frequency" />
+                <input type="date" name="event_end_date" title="Koniec" value="$event_end_date" class="form-control input-sm" id="event_end_date" />
+                <button type="submit" class="btn btn-xs btn-primary" title="Dodaj"><span class="glyphicon glyphicon-plus"></span></button>
+                <script>
+                    var event_end_date = $$('#event_end_date');
+                    var event_frequency = $$('#event_frequency');
+                    event_end_date.hide();
+                    event_frequency.change(function(ev)
+                    {
+                        if(parseInt(event_frequency.val()) <= 0)
+                            event_end_date.hide();
+
+                        else
+                            event_end_date.show();
+                    });
+                </script>
+            </form>
+        </td>
+    </tr>
+
+$for event in placement_events:
+    <tr>
+        <td>$loop.index</td>
+        <td><a href="$get_url('event_view', event.event_id)">$event.name</a></td>
+        <td>$event.description</td>
+        <td>Od $event.from_date.strftime('%Y-%m-%d %H:%M') do $event.to_date.strftime('%Y-%m-%d %H:%M')
+            $if event.frequency:
+                Co $event.frequency tydzień, kończąc $event.end_date.date()
+        </td>
+    </tr>
+</tbody>
+    </table>
+</div>

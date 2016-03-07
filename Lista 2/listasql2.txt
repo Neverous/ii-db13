@@ -1,0 +1,186 @@
+-- zad.1
+
+SELECT DISTINCT kod_uz, imie, nazwisko
+FROM        uzytkownik
+    JOIN    grupa                                   USING(kod_uz)
+    JOIN    przedmiot_semestr AS przedmiot_semestr1 USING(kod_przed_sem)
+    JOIN    przedmiot                               USING(kod_przed)
+WHERE   przedmiot.nazwa LIKE 'Logika%'
+    AND kod_uz IN
+    (
+        SELECT kod_uz
+        FROM        uzytkownik
+            JOIN    grupa               USING(kod_uz)
+            JOIN    przedmiot_semestr   USING(kod_przed_sem)
+            JOIN    przedmiot           USING(kod_przed)
+        WHERE   przedmiot.nazwa LIKE 'Algorytmy%'
+            AND semestr_id > przedmiot_semestr1.semestr_id
+    )
+ORDER BY imie;
+
+-- zad.2
+
+SELECT AVG(count)
+FROM
+(
+    SELECT COUNT(DISTINCT kod_grupy) as count
+    FROM        semestr
+        JOIN    przedmiot_semestr   USING(semestr_id)
+        JOIN    grupa               USING(kod_przed_sem)
+    WHERE grupa.rodzaj_zajec = 'w'
+    GROUP BY semestr_id
+) AS CNT;
+
+-- zad.3
+
+SELECT DISTINCT kod_uz, imie, nazwisko
+FROM        uzytkownik AS uzytkownik1
+    JOIN    grupa                                       USING(kod_uz)
+    JOIN    przedmiot_semestr AS przedmiot_semestr1     USING(kod_przed_sem)
+    JOIN    przedmiot                                   USING(kod_przed)
+WHERE   przedmiot.nazwa LIKE 'Logika%'
+    AND EXISTS
+    (
+        SELECT *
+        FROM        uzytkownik
+            JOIN    grupa               USING(kod_uz)
+            JOIN    przedmiot_semestr   USING(kod_przed_sem)
+            JOIN    przedmiot           USING(kod_przed)
+        WHERE   przedmiot.nazwa LIKE 'Algorytmy%'
+            AND semestr_id > przedmiot_semestr1.semestr_id
+            AND kod_uz = uzytkownik1.kod_uz
+    );
+
+-- zad.4
+
+SELECT DISTINCT uzytkownik1.kod_uz, imie, nazwisko
+FROM        uzytkownik AS uzytkownik1
+    JOIN    wybor               USING(kod_uz)
+    JOIN    grupa               USING(kod_grupy)
+    JOIN    przedmiot_semestr   USING(kod_przed_sem)
+    JOIN    przedmiot           USING(kod_przed)
+WHERE   grupa.rodzaj_zajec = 'w'
+    AND przedmiot.rodzaj = 'o'
+    AND NOT EXISTS
+    (
+        SELECT *
+        FROM        uzytkownik
+            JOIN    wybor               USING(kod_uz)
+            JOIN    grupa               USING(kod_grupy)
+            JOIN    przedmiot_semestr   USING(kod_przed_sem)
+            JOIN    przedmiot           USING(kod_przed)
+        WHERE   uzytkownik.kod_uz = uzytkownik1.kod_uz
+            AND przedmiot.rodzaj = 'k'
+    )
+ORDER BY nazwisko DESC;
+
+-- zad.5
+
+(
+    SELECT DISTINCT uzytkownik.kod_uz, imie, nazwisko
+    FROM        uzytkownik
+        JOIN    wybor               USING(kod_uz)
+        JOIN    grupa               USING(kod_grupy)
+        JOIN    przedmiot_semestr   USING(kod_przed_sem)
+        JOIN    przedmiot           USING(kod_przed)
+    WHERE   grupa.rodzaj_zajec = 'w'
+        AND przedmiot.rodzaj = 'o'
+)
+EXCEPT
+(
+    SELECT uzytkownik.kod_uz, imie, nazwisko
+    FROM        uzytkownik
+        JOIN    wybor               USING(kod_uz)
+        JOIN    grupa               USING(kod_grupy)
+        JOIN    przedmiot_semestr   USING(kod_przed_sem)
+        JOIN    przedmiot           USING(kod_przed)
+    WHERE przedmiot.rodzaj = 'k'
+)
+ORDER BY nazwisko;
+
+-- zad.6
+
+SELECT nazwa, COUNT(DISTINCT kod_uz)
+FROM            przedmiot
+    LEFT JOIN   przedmiot_semestr   USING(kod_przed)
+    LEFT JOIN   grupa               USING(kod_przed_sem)
+GROUP BY kod_przed
+--HAVING COUNT(DISTINCT kod_uz) = 0
+ORDER BY count DESC;
+
+-- zad.7
+
+WITH
+    uczestnicy_jfizo AS
+    (
+        SELECT DISTINCT uzytkownik.kod_uz, imie, nazwisko, semestr_id
+        FROM        uzytkownik
+            JOIN    wybor               USING(kod_uz)
+            JOIN    grupa               USING(kod_grupy)
+            JOIN    przedmiot_semestr   USING(kod_przed_sem)
+            JOIN    przedmiot           USING(kod_przed)
+        WHERE przedmiot.nazwa = 'Języki formalne i złożoność obliczeniowa'
+    )
+SELECT kod_uz, imie, nazwisko
+FROM uczestnicy_jfizo
+GROUP BY kod_uz, imie, nazwisko
+HAVING COUNT(DISTINCT semestr_id) > 2;
+
+-- zad.8
+
+SELECT nazwa, nazwisko
+FROM        uzytkownik
+    JOIN    grupa               USING(kod_uz)
+    JOIN    przedmiot_semestr   USING(kod_przed_sem)
+    JOIN    semestr             USING(semestr_id)
+WHERE   grupa.rodzaj_zajec = 'w'
+GROUP BY semestr_id, nazwa, kod_uz
+HAVING COUNT(DISTINCT kod_grupy) >= 3;
+
+-- zad.9
+
+SELECT nazwisko --, COUNT(DISTINCT kod_przed)
+FROM        uzytkownik
+    JOIN    grupa               USING(kod_uz)
+    JOIN    przedmiot_semestr   USING(kod_przed_sem)
+WHERE grupa.rodzaj_zajec = 'w'
+GROUP BY nazwisko
+HAVING COUNT(DISTINCT kod_przed) =
+    (
+        SELECT MAX(count)
+        FROM
+        (
+            SELECT COUNT(DISTINCT kod_przed) AS count
+            FROM uzytkownik
+                JOIN    grupa               USING(kod_uz)
+                JOIN    przedmiot_semestr   USING(kod_przed_sem)
+            WHERE grupa.rodzaj_zajec = 'w'
+            GROUP BY nazwisko
+        ) AS cnt
+    );
+
+-- zad.10
+
+WITH
+    semestr_osoba AS
+    (
+        SELECT nazwa, semestr_id, imie, nazwisko, MAX(data) - MIN(data) AS czas
+        FROM        semestr
+            JOIN    przedmiot_semestr   USING(semestr_id)
+            JOIN    grupa               USING(kod_przed_sem)
+            JOIN    wybor               USING(kod_grupy)
+            JOIN    uzytkownik          ON uzytkownik.kod_uz = wybor.kod_uz
+        GROUP BY nazwa, uzytkownik.kod_uz, nazwisko, semestr_id
+    ),
+
+    semestr_zapis AS
+    (
+        SELECT nazwa, semestr_id, MIN(czas) AS czas
+        FROM semestr_osoba
+        GROUP BY nazwa, semestr_id
+    )
+SELECT nazwa, imie, nazwisko
+FROM        semestr_osoba
+    JOIN    semestr_zapis USING(nazwa, czas, semestr_id)
+GROUP BY nazwa, imie, nazwisko, semestr_id
+ORDER BY semestr_id, nazwisko

@@ -1,0 +1,317 @@
+/*********************************    1     **********************************/
+
+-- 1.
+CREATE DOMAIN semestry AS varchar(8)
+CHECK ( VALUE IN ('zimowy', 'letni')
+    AND VALUE IS NOT NULL);
+
+
+-- 2.
+CREATE SEQUENCE numer_semestru;
+SELECT setval('numer_semestru', MAX(semestr_id))
+FROM semestr;
+
+
+-- 3. / 6.
+ALTER TABLE semestr
+ADD COLUMN semestr semestry DEFAULT
+CASE
+    WHEN    1 <= EXTRACT(MONTH FROM NOW())
+        AND EXTRACT(MONTH FROM NOW()) <= 6
+        THEN 'letni'
+    ELSE 'zimowy'
+END,
+ADD COLUMN rok char(9) DEFAULT
+CASE
+    WHEN    1 <= EXTRACT(MONTH FROM NOW())
+        AND EXTRACT(MONTH FROM NOW()) <= 6
+        THEN EXTRACT(YEAR FROM NOW()) - 1 || '/' || EXTRACT(YEAR FROM NOW())
+    ELSE EXTRACT(YEAR FROM NOW()) || '/' || EXTRACT(YEAR FROM NOW()) + 1
+END;
+
+-- 4.
+UPDATE semestr
+SET
+    semestr = split_part(semestr.nazwa, ' ', 2),
+    rok     = split_part(semestr.nazwa, ' ', 3);
+
+-- 5.
+ALTER TABLE semestr
+DROP COLUMN nazwa;
+
+/*
+INSERT INTO semestr VALUES(90);
+
+SELECT * FROM semestr ORDER BY semestr_id DESC LIMIT 10;
+*/
+/*********************************    2     **********************************/
+
+\i 1.sql
+
+-- 0.
+INSERT INTO semestr
+VALUES
+    (nextval('numer_semestru'), 'zimowy', '2013/2014'),
+    (nextval('numer_semestru'), 'letni', '2013/2014');
+
+-- 1.
+CREATE SEQUENCE numer_przedmiot_semestr;
+SELECT setval('numer_przedmiot_semestr', MAX(kod_przed_sem))
+FROM przedmiot_semestr;
+
+CREATE SEQUENCE numer_grupy;
+SELECT setval('numer_grupy', MAX(kod_grupy))
+FROM grupa;
+
+-- 2.
+INSERT INTO przedmiot_semestr
+SELECT nextval('numer_przedmiot_semestr'), semestr_id, kod_przed
+FROM przedmiot, semestr
+WHERE   (semestr.semestr = 'zimowy' OR semestr.semestr = 'letni')
+    AND semestr.rok     = '2013/2014'
+    AND (przedmiot.rodzaj = 'o' OR przedmiot.rodzaj = 'p');
+
+-- 3.
+ALTER TABLE grupa
+ALTER kod_uz DROP NOT NULL;
+
+INSERT INTO grupa
+SELECT nextval('numer_grupy'), kod_przed_sem, NULL, 100, 'w', NULL, NULL
+FROM        semestr
+    JOIN    przedmiot_semestr   USING(semestr_id)
+    JOIN    przedmiot           USING(kod_przed)
+WHERE   (semestr.semestr = 'zimowy' OR semestr.semestr = 'letni')
+    AND semestr.rok     = '2013/2014'
+    AND (przedmiot.rodzaj = 'o' OR przedmiot.rodzaj = 'p');
+
+-- 4.
+SELECT *
+FROM        grupa
+    JOIN    przedmiot_semestr   USING(kod_przed_sem)
+    JOIN    przedmiot           USING(kod_przed)
+    JOIN    semestr             USING(semestr_id)
+WHERE   (semestr.semestr = 'zimowy' OR semestr.semestr = 'letni')
+    AND semestr.rok     = '2013/2014';
+/*********************************    3     **********************************/
+
+-- 1.
+CREATE TABLE pracownik
+(
+    kod_uz      INTEGER NOT NULL PRIMARY KEY,
+    imie        VARCHAR(15) NOT NULL,
+    nazwisko    VARCHAR(30) NOT NULL
+);
+
+CREATE TABLE student
+(
+    kod_uz      INTEGER NOT NULL PRIMARY KEY,
+    imie        VARCHAR(15) NOT NULL,
+    nazwisko    VARCHAR(30) NOT NULL,
+    semestr     SMALLINT
+);
+
+-- 2.
+INSERT INTO pracownik
+SELECT DISTINCT kod_uz, imie, nazwisko
+FROM        grupa
+    JOIN    uzytkownik USING(kod_uz);
+
+-- 3.
+INSERT INTO student
+SELECT DISTINCT kod_uz, imie, nazwisko, semestr
+FROM        wybor
+    JOIN    uzytkownik USING(kod_uz);
+
+-- 4.
+ALTER TABLE grupa
+DROP CONSTRAINT fk_grupa_uz,
+ADD CONSTRAINT fk_grupa_uz FOREIGN KEY(kod_uz) REFERENCES pracownik;
+
+ALTER TABLE wybor
+DROP CONSTRAINT fk_wybor_uz,
+ADD CONSTRAINT fk_wybor_uz FOREIGN KEY(kod_uz) REFERENCES student;
+
+DROP TABLE uzytkownik;
+/*********************************    4     **********************************/
+
+-- 1.
+CREATE DOMAIN rodzaje_zajec AS char(1)
+CHECK ( VALUE IS NOT NULL
+    AND VALUE IN (  'w', 'W',
+                    'c', 'C',
+                    'e', 'E',
+                    'p', 'P',
+                    'r', 'R',
+                    's', 'S' )
+);
+
+-- 2.
+ALTER TABLE grupa
+ALTER COLUMN rodzaj_zajec TYPE rodzaje_zajec;
+
+-- 3.
+CREATE VIEW obsada_zajec_view (prac_kod, prac_nazwisko, przed_kod, przed_nazwa, rodzaj_zajec, liczba_grup, liczba_studentow)
+AS SELECT pracownik.kod_uz, pracownik.nazwisko, przedmiot.kod_przed, przedmiot.nazwa, grupa.rodzaj_zajec, COUNT(DISTINCT grupa.kod_grupy), COUNT(DISTINCT student.kod_uz)
+FROM        grupa
+    JOIN    uzytkownik AS pracownik ON grupa.kod_uz = pracownik.kod_uz
+    JOIN    przedmiot_semestr   USING(kod_przed_sem)
+    JOIN    przedmiot           USING(kod_przed)
+    JOIN    wybor               USING(kod_grupy)
+    JOIN    uzytkownik AS student ON wybor.kod_uz = student.kod_uz
+GROUP BY pracownik.kod_uz, pracownik.nazwisko, przedmiot.kod_przed, przedmiot.nazwa, grupa.rodzaj_zajec;
+
+-- 4.
+CREATE TABLE obsada_zajec_tab
+(
+    prac_kod            INTEGER NOT NULL,
+    prac_nazwisko       VARCHAR(30) NOT NULL,
+    przed_kod           INTEGER NOT NULL,
+    przed_nazwa         TEXT,
+    rodzaj_zajec        rodzaje_zajec,
+    liczba_grup         INTEGER,
+    liczba_studentow    INTEGER
+);
+
+INSERT INTO obsada_zajec_tab
+SELECT * FROM obsada_zajec_view;
+
+-- 5.
+SELECT DISTINCT max_studentow.przed_kod, przed_nazwa, prac_kod, prac_nazwisko, max_studentow.liczba_studentow
+FROM
+(
+    SELECT przed_kod, MAX(liczba_studentow) AS liczba_studentow
+    FROM        obsada_zajec_view
+        JOIN    przedmiot ON przedmiot.kod_przed = przed_kod
+    WHERE (przedmiot.rodzaj = 'o' OR przedmiot.rodzaj = 'p')
+    GROUP BY przed_kod
+) AS        max_studentow
+    JOIN    obsada_zajec_view ON max_studentow.przed_kod = obsada_zajec_view.przed_kod AND max_studentow.liczba_studentow = obsada_zajec_view.liczba_studentow
+ORDER BY max_studentow.liczba_studentow, przed_nazwa, prac_nazwisko;
+-- > ~1900ms
+
+SELECT DISTINCT max_studentow.przed_kod, przed_nazwa, prac_kod, prac_nazwisko, max_studentow.liczba_studentow
+FROM
+(
+    SELECT przed_kod, MAX(liczba_studentow) AS liczba_studentow
+    FROM        obsada_zajec_tab
+        JOIN    przedmiot ON przedmiot.kod_przed = przed_kod
+    WHERE (przedmiot.rodzaj = 'o' OR przedmiot.rodzaj = 'p')
+    GROUP BY przed_kod
+) AS        max_studentow
+    JOIN    obsada_zajec_tab ON max_studentow.przed_kod = obsada_zajec_tab.przed_kod AND max_studentow.liczba_studentow = obsada_zajec_tab.liczba_studentow
+ORDER BY max_studentow.liczba_studentow, przed_nazwa, prac_nazwisko;
+
+-- > ~3ms
+/*********************************    5     **********************************/
+
+\i 2.sql
+\i 3.sql
+
+-- 1.
+CREATE TABLE firma
+(
+    kod_firmy   SERIAL PRIMARY KEY,
+    nazwa       VARCHAR(256) NOT NULL,
+    adres       VARCHAR(256) NOT NULL,
+    kontakt     VARCHAR(256) NOT NULL
+);
+
+-- 2.
+INSERT INTO firma(nazwa, adres, kontakt)
+VALUES
+    ('SNS', 'Wrocław', 'H.Kloss'),
+    ('BIT', 'Kraków', 'R.Bruner'),
+    ('MIT', 'Berlin', 'J.Kos');
+
+-- 3.
+CREATE TABLE oferta_praktyki
+(
+    kod_oferty      SERIAL PRIMARY KEY,
+    kod_firmy       INTEGER REFERENCES firma,
+    semestr_id      INTEGER REFERENCES semestr,
+    liczba_miejsc   INTEGER
+);
+
+-- 4.
+INSERT INTO oferta_praktyki(kod_firmy, semestr_id, liczba_miejsc)
+SELECT kod_firmy, semestr_id, 3
+FROM firma, semestr
+WHERE firma.nazwa = 'SNS' AND semestr.rok = '2013/2014' AND semestr.semestr = 'letni';
+
+INSERT INTO oferta_praktyki(kod_firmy, semestr_id, liczba_miejsc)
+SELECT kod_firmy, semestr_id, 2
+FROM firma, semestr
+WHERE firma.nazwa = 'MIT' AND semestr.rok = '2013/2014' AND semestr.semestr = 'letni';
+
+-- 5.
+CREATE TABLE praktyki
+(
+    student INTEGER REFERENCES student,
+    opiekun INTEGER REFERENCES pracownik,
+    oferta  INTEGER REFERENCES oferta_praktyki
+);
+
+-- 6.
+-- ??
+
+-- 7.
+(
+    SELECT student.*
+    FROM        student
+    WHERE   6 <= student.semestr AND student.semestr <= 10
+)
+EXCEPT
+(
+    SELECT student.*
+    FROM        student
+        JOIN    wybor               USING(kod_uz)
+        JOIN    grupa               USING(kod_grupy)
+        JOIN    przedmiot_semestr   USING(kod_przed_sem)
+        JOIN    przedmiot           USING(kod_przed)
+    WHERE   6 <= student.semestr AND student.semestr <= 10
+        AND przedmiot.nazwa = 'Praktyka zawodowa'
+);
+
+-- 8.
+DELETE FROM oferta_praktyki
+WHERE NOT EXISTS (SELECT * FROM praktyki WHERE oferta = oferta_praktyki.kod_oferty);
+
+DELETE FROM firma
+WHERE NOT EXISTS (SELECT * FROM oferta_praktyki WHERE oferta_praktyki.kod_firmy = firma.kod_firmy);
+/*********************************    6     **********************************/
+\i 3.sql
+
+-- 1.
+CREATE VIEW plan_zajec(student_kod, student_nazwisko, semestr_id, przedmiot_kod, przedmiot_nazwa, zajecia_sala, prowadzacy_kod, prowadzacy_nazwisko, termin)
+AS
+(
+    SELECT student.kod_uz, student.nazwisko, przedmiot_semestr.semestr_id, przedmiot.kod_przed, przedmiot.nazwa, grupa.sala, grupa.kod_uz, pracownik.nazwisko, grupa.termin
+    FROM        student
+        JOIN    wybor               ON student.kod_uz   = wybor.kod_uz
+        JOIN    grupa               ON wybor.kod_grupy  = grupa.kod_grupy
+        JOIN    pracownik           ON grupa.kod_uz     = pracownik.kod_uz
+        JOIN    przedmiot_semestr   USING(kod_przed_sem)
+        JOIN    przedmiot           USING(kod_przed)
+    ORDER BY grupa.termin
+);
+
+-- 2.
+SELECT *
+FROM plan_zajec
+WHERE   student_kod = 2884
+    AND semestr_id  = 28
+ORDER BY termin;
+
+-- 3.
+SELECT DISTINCT semestr_id, przedmiot_kod, przedmiot_nazwa, zajecia_sala, prowadzacy_kod, prowadzacy_nazwisko, termin
+FROM plan_zajec
+WHERE   prowadzacy_kod  = 166
+    AND semestr_id      = 28
+ORDER BY termin;
+
+-- 4.
+SELECT DISTINCT semestr_id, przedmiot_kod, przedmiot_nazwa, zajecia_sala, prowadzacy_kod, prowadzacy_nazwisko, termin
+FROM plan_zajec
+WHERE   zajecia_sala    = '119'
+    AND semestr_id      = 28
+ORDER BY termin;

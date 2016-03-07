@@ -1,0 +1,107 @@
+$def with (shops=(), products=(), shop_id=None, shop_name=None, shop_address=None, product_id=None, product_name=None, comment=None, price=None, count=None)
+$var id: warehouse
+$var title: Dodaj produkt do magazynu -
+<div class="container">
+    <article>
+        <header class="page-header">
+            <h1>Dodaj produkt do magazynu</h1>
+        </header>
+        <form class="form-horizontal" role="add" method="POST" action="$get_url('product_add_view')">
+            <input name="token" type="hidden" value="$session.token" />
+            <article class="form-group">
+                <label for="shop_name" class="col-sm-2 control-label">Sklep</label>
+                <div class="col-sm-10">
+                    <input name="shop_id" type="hidden" id="shop_id" value="$shop_id" />
+                    <input name="shop_name" type="text" class="form-control" id="shop_name" placeholder="Nazwa sklepu" value="$shop_name" required="required" />
+                    <input name="shop_address" type="text" class="form-control" id="shop_address" placeholder="Adres sklepu" value="$shop_address" required="required" />
+                    <script>
+                        var shop_id         = $$('#shop_id');
+                        var shop_name       = $$('#shop_name');
+                        var shop_address    = $$('#shop_address');
+                        shop_name.autocomplete({
+                            source: [
+                                $for shop in shops:
+                                    {label: '$shop.name, $shop.address', value: '$shop.shop_id\0$shop.name\0$shop.address'},
+                            ],
+
+                            select: function(ev, ui)
+                            {
+                                ev.preventDefault();
+                                var data = ui.item.value.split('\0');
+                                shop_id.val(data[0]);
+                                shop_name.val(data[1]);
+                                shop_address.val(data[2]);
+                            },
+
+                            focus: function(ev, ui)
+                            {
+                                ev.preventDefault();
+                                var data = ui.item.value.split('\0');
+                                shop_id.val(data[0]);
+                                shop_name.val(data[1]);
+                                shop_address.val(data[2]);
+                            }
+                        });
+                    </script>
+                </div>
+            </article>
+            <article class="form-group">
+                <label for="product_name" class="col-sm-2 control-label">Produkt</label>
+                <div class="col-sm-10">
+                    <input name="product_id" type="hidden" id="product_id" value="$product_id" />
+                    <input name="product_name" type="text" class="form-control" id="product_name" placeholder="Nazwa produktu" value="$product_name" required="required" />
+                    <script>
+                        var product_id      = $$('#product_id');
+                        var product_name    = $$('#product_name');
+                        product_name.autocomplete({
+                            source: [
+                                $for product in products:
+                                    {label: '$product.name', value: '$product.product_id'},
+                            ],
+
+                            select: function(ev, ui)
+                            {
+                                ev.preventDefault();
+                                product_id.val(ui.item.value);
+                                product_name.val(ui.item.label);
+                            },
+
+                            focus: function(ev, ui)
+                            {
+                                ev.preventDefault();
+                                product_id.val(ui.item.value);
+                                product_name.val(ui.item.label);
+                            }
+                        });
+                    </script>
+                </div>
+            </article>
+            <article class="form-group">
+                <label for="commment" class="col-sm-2 control-label">Komentarz</label>
+                <div class="col-sm-10">
+                    <input name="comment" type="text" class="form-control" id="comment" placeholder="Komentarz" value="$comment" />
+                    <span class="help-block">Dodatkowe informacje(np. lokalizacja, numer seryjny itp.)</span>
+                </div>
+            </article>
+            <article class="form-group">
+                <label for="price" class="col-sm-2 control-label">Cena(jednostkowa)</label>
+                <div class="col-sm-10">
+                    <input name="price" type="number" class="form-control" id="price" placeholder="Cena" value="$price" step="any" required="required" />
+                </div>
+            </article>
+            <article class="form-group">
+                <label for="count" class="col-sm-2 control-label">Ilość</label>
+                <div class="col-sm-10">
+                    <input name="count" type="number" class="form-control" id="count" placeholder="Ilość" value="$count" required="required" />
+                </div>
+            </article>
+            <article class="form-group">
+                <div class="col-sm-offset-2 col-sm-2">
+                    <button type="submit" class="btn btn-default">Dodaj <span class="glyphicon glyphicon-plus"></span></button>
+                </div>
+            </article>
+        </form>
+        <footer>
+        </footer>
+    </article>
+</div>

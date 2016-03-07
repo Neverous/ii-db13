@@ -1,0 +1,16 @@
+$def with (garden_id, fields)
+$code:
+    minRow  = fields and min([field.y for field in fields])
+    maxRow  = fields and max([field.y for field in fields])
+    minCol  = fields and min([field.x for field in fields])
+    maxCol  = fields and max([field.x for field in fields])
+    width   = (maxCol - minCol + 1) * 16
+    height  = (maxRow - minRow + 1) * 16
+    act = 0
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg id="garden_thumbnail_$garden_id" xmlns="http://www.w3.org/2000/svg" width="$width" height="$height">
+$for r, row in enumerate(range(maxRow, minRow - 1, -1)):
+    $for c, col in enumerate(range(minCol, maxCol + 1)):
+        $code: while act < len(fields) and (-fields[act].y, fields[act].x) < (-row, col): act += 1
+        <rect x="${c * 16}" y="${r * 16}" width="16" height="16" fill="${(act < len(fields) and (fields[act].y, fields[act].x) == (row, col)) and '#5fc148' or '#a9784c'}" />
+</svg>

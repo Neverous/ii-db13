@@ -1,0 +1,50 @@
+$def with (name=None, fields=())
+$var id: gardens
+$var title: Nowy ogród -
+$var head: <script src="$get_url('static_view', 'js/garden.js')"></script>
+$code: minRow = fields and min([row for row, _ in fields]) - 1 or -2
+$code: maxRow = fields and max([row for row, _ in fields]) + 1 or 2
+$code: minCol = fields and min([col for _, col in fields]) - 1 or -2
+$code: maxCol = fields and max([col for _, col in fields]) + 1 or 2
+$code: act = 0
+<div class="container">
+    <article>
+        <header class="page-header">
+            <h1>Nowy ogród</h1>
+        </header>
+        <form class="form-horizontal" role="register" method="POST" action="$get_url('garden_add_view')">
+            <input name="token" type="hidden" value="$session.token" />
+            <article class="form-group">
+                <label for="name" class="col-sm-2 control-label">Nazwa ogrodu</label>
+                <div class="col-sm-10">
+                    <input name="name" type="text" class="form-control" id="name" placeholder="Nazwa ogrodu" value="$name" required="required" />
+                </div>
+            </article>
+            <article class="form-group">
+                <label for="name" class="col-sm-2 control-label">Obszar</label>
+                <div class="col-sm-10">
+<section class="garden-grid grid-edit">
+$for row in range(maxRow, minRow - 1, -1):
+    <div class="garden-row" id="row_$row">\
+    $for col in range(minCol, maxCol + 1):
+        $code: while act < len(fields) and (-fields[act][0], fields[act][1]) < (-row, col): act += 1
+        <section class="garden-cell-background">\
+        <article class="garden-cell" id="cell_${row}_${col}">\
+        <input type="checkbox" name="fields" value="$row,$col"${(act < len(fields) and fields[act] == (row, col)) and ' checked="checked"' or ''} />\
+        </article>\
+        </section>\
+    </div>
+<div class="clearfix"></div>
+</section>
+                </div>
+            </article>
+            <article class="form-group">
+                <div class="col-sm-offset-2 col-sm-2">
+                    <button type="submit" class="btn btn-default">Dodaj <span class="glyphicon glyphicon-plus"></span></button>
+                </div>
+            </article>
+        </form>
+        <footer>
+        </footer>
+    </article>
+</div>

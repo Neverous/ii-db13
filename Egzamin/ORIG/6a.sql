@@ -1,0 +1,2 @@
+ALTER TABLE zadanie
+    ADD COLUMN aktywne BOOLEAN DEFAULT true;

@@ -1,0 +1,159 @@
+$def with (current_start, current_end, name, fields, placements, events, plants=(), selected_fields=None, plant_id=None, plant_name=None, placement_name=None, placement_comment=None, placement_date=None)
+$var id: gardens
+$var title: $name - Ogród -
+$var head: <script src="$get_url(u'static_view', u'js/garden.js')"></script>
+$code:
+    minRow  = fields and min([field.y for field in fields])
+    maxRow  = fields and max([field.y for field in fields])
+    minCol  = fields and min([field.x for field in fields])
+    maxCol  = fields and max([field.x for field in fields])
+    act = 0
+<div class="container">
+    <article>
+        <header class="page-header">
+            <div class="pull-right">
+                <form action="" method="GET">
+                    Stan od <input type="date" name="current_start" value="$current_start" class="input-sm" required="required" /> do <input type="date" name="current_end" value="$current_end" class="input-sm" required="required" /> <button class="btn btn-xs btn-success" type="submit">Zmień</button>
+                </form>
+            </div>
+            <h1>$name - Ogród</h1>
+        </header>
+        <div class="row">
+            <div class="col-sm-8">
+<section class="garden-grid grid-select well" data-toggle="tooltip" title="Kliknij aby zaznaczyć, przytrzymaj aby przesunąć">
+$for row in range(maxRow, minRow - 1, -1):
+    <div class="garden-row" id="row_$row">\
+    $for col in range(minCol, maxCol + 1):
+        $code: while act < len(fields) and (-fields[act].y, fields[act].x) < (-row, col): act += 1
+        $code: grass = (act < len(fields) and (fields[act].y, fields[act].x) == (row, col))
+        <section class="garden-cell-background${grass and ' grass' or ''}">\
+            <article class="garden-cell" id="cell_${row}_${col}"${(grass and fields[act].events) and ' data-events=' + fields[act].events} ${grass and 'data-field-id=%d'%fields[act].field_id} >\
+            $if grass and fields[act].placements:
+                $for placement_id in fields[act].placements.split(','):
+                    <span class="plant" data-placement="$placement_id"></span>\
+        </article>\
+        </section>\
+    </div>
+<div class="clearfix"></div>
+</section>
+            </div>
+            <div class="col-sm-4">
+                <ul class="nav nav-tabs">
+                    <li class="active"><a href="#plants" data-toggle="tab">Rośliny</a></li>
+                    <li><a href="#events" data-toggle="tab">Zabiegi</a></li>
+                    <li><a href="#add_new" data-toggle="tab">Posadź</a></li>
+                </ul>
+                <section class="tab-content">
+                    <article class="tab-pane fade in active" id="plants">
+                        <ul>
+                        $for placement in placements:
+                            <li><a href="#placement_$placement.placement_id" data-fields="$placement.fields" data-toggle="toggle" data-parent="#info" id="placement_link_$placement.placement_id">$placement.name</a></li>
+                        </ul>
+                    </article>
+                    <article class="tab-pane fade" id="events">
+                        <ul>
+                        $for event in events:
+                            <li><a href="#event_$event.event_id" data-fields="$event.fields" data-toggle="toggle" data-parent="#info" id="event_link_$event.event_id">$event.name</a></li>
+                        </ul>
+                    </article>
+                    <article class="tab-pane fade" id="add_new">
+                        <p>Zostanie dodana na zaznaczonych polach</p>
+                        <form class="form-horizontal" role="add" method="POST" action="">
+                            <input name="token" type="hidden" value="$session.token" />
+                            <input name="selected_fields" type="hidden" id="selected_fields" value="$selected_fields" />
+                            <article class="form-group">
+                                <label for="plant_name" class="col-sm-2 control-label">Roślina</label>
+                                <div class="col-sm-10">
+                                    <input name="plant_id" type="hidden" id="plant_id" value="$plant_id" />
+                                    <input name="plant_name" type="text" class="form-control" id="plant_name" placeholder="Nazwa rośliny" value="$plant_name" required="required" />
+                                </div>
+                            </article>
+                            <article class="form-group">
+                                <label for="placement_name" class="col-sm-2 control-label">Nazwa posadzenia</label>
+                                <div class="col-sm-10">
+                                    <input type="text" name="placement_name" class="form-control" id="placement_name" placeholder="Nazwa posadzenia" value="$placement_name" required="required" />
+                                </div>
+                            </article>
+                            <article class="form-group">
+                                <label for="placement_comment" class="col-sm-2 control-label">Komentarz</label>
+                                <div class="col-sm-10">
+                                    <input type="text" name="placement_comment" class="form-control" id="placement_comment" placeholder="Komentarz" value="$placement_comment" />
+                                </div>
+                            </article>
+                            <article class="form-group">
+                                <label for="placement_date" class="col-sm-2 control-label">Data posadzenia</label>
+                                <div class="col-sm-10">
+                                    <input type="date" name="placement_date" class="form-control" id="placement_date" value="$placement_date" />
+                                </div>
+                            </article>
+                            <article class="form-group">
+                                <div class="col-sm-offset-2 col-sm-2">
+                                    <button type="submit" class="btn btn-default">Dodaj <span class="glyphicon glyphicon-plus"></span></button>
+                                </div>
+                            </article>
+                            <script>
+                                var plant_id         = $$('#plant_id');
+                                var plant_name       = $$('#plant_name');
+                                var placement_name   = $$('#placement_name');
+                                plant_name.autocomplete({
+                                    source: [
+                                        $for plant in plants:
+                                            {label: '$plant.name', value: '$plant.plant_id'},
+                                    ],
+
+                                    select: function(ev, ui)
+                                    {
+                                        ev.preventDefault();
+                                        plant_id.val(ui.item.value);
+                                        plant_name.val(ui.item.label);
+                                        placement_name.val(ui.item.label);
+                                    },
+
+                                    focus: function(ev, ui)
+                                    {
+                                        ev.preventDefault();
+                                        plant_id.val(ui.item.value);
+                                        plant_name.val(ui.item.label);
+                                        placement_name.val(ui.item.label);
+                                    }
+                                });
+                            </script>
+                        </form>
+                    </article>
+                </section>
+            </div>
+        </div>
+        <section>
+            <header>
+                <h3>Informacje</h3>
+            </header>
+            <div class="tab-content" id="info">
+            $for placement in placements:
+                <article class="tab-pane" id="placement_$placement.placement_id">
+                    <header>
+                        <a class="pull-right btn btn-info btn-xs external" href="$get_url(u'placement_view', placement.placement_id)">Szczegóły</a>
+                        <h4>$placement.name/$placement.plant_name</h4>
+                        <em>Posadzona: $placement.placement_date</em>
+                    </header>
+                    <p>$placement.comment</p>
+                </article>
+
+            $for event in events:
+                <article class="tab-pane" id="event_$event.event_id">
+                    <header>
+                        <a class="pull-right btn btn-info btn-xs external" href="$get_url(u'event_view', event.event_id)">Szczegóły</a>
+                        <h4>$event.name na $event.placement_name</h4>
+                        <em>
+                            Od $event.from_date.strftime('%Y-%m-%d %H:%M') do $event.to_date.strftime('%Y-%m-%d %H:%M')
+                            $if event.frequency:
+                                Powtarzając co $event.frequency tydzień, kończąc $event.end_date.date()
+                        </em>
+                    </header>
+                    <p>$event.description</p>
+                </article>
+            </div>
+        </section>
+        <footer>
+        </footer>
+    </article>
+</div>

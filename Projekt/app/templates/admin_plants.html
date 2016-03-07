@@ -1,0 +1,38 @@
+$def with (plants)
+$var id: admin_plants
+$var title: Rośliny -
+<table class="table table-striped table-bordered">
+<thead>
+    <tr>
+        <th>#</th>
+        <th>Dodał</th>
+        <th>Nazwa rośliny</th>
+        <th></th>
+    </tr>
+</thead>
+<tbody>
+<tr>
+    <td colspan="4" style="text-align: center;">
+        <form method="POST" action="" class="form-inline">
+            <input type="hidden" name="token" value="$session.token" />
+            <input type="hidden" name="action" value="add" />
+            <input type="text" name="name" placeholder="Nazwa rośliny" required="required" class="input-sm form-control"/>
+            <button class="btn btn-sm btn-primary" type="submit"><span class="glyphicon glyphicon-plus"></span></button>
+        </form>
+    </td>
+</tr>
+$for plant in plants:
+    <tr>
+        <td>$plant.plant_id</td>
+        <td>$plant.nick</td>
+        <td>$plant.name</td>
+        <td>
+            <form method="POST" action="$get_url('admin_plant_view', plant.plant_id)" class="form-inline">
+                <input type="hidden" name="token" value="$session.token" />
+                <a href="$get_url('admin_plant_view', plant.plant_id)" class="btn btn-xs btn-info external" title="Edytuj"><span class="glyphicon glyphicon-pencil"></span></a>
+                <button type="submit" name="action" value="remove" class="btn btn-xs btn-danger" title="Usuń"><span class="glyphicon glyphicon-remove"></span></button>
+            </form>
+        </td>
+    </tr>
+</tbody>
+</table>

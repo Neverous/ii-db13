@@ -1,0 +1,67 @@
+$var id: events
+$var title: Zabiegi -
+$var head:
+    <link rel="stylesheet" type="text/css" href="$get_url(u'static_view', 'css/calendar.min.css')" media="screen" />
+    <script src="$get_url(u'static_view', 'js/jstz.min.js')"></script>
+    <script src="$get_url(u'static_view', 'js/underscore.min.js')"></script>
+    <script src="$get_url(u'static_view', 'js/calendar.pl_PL.js')"></script>
+    <script src="$get_url(u'static_view', 'js/calendar.min.js')"></script>
+
+<div class="container">
+    <article>
+        <header class="page-header">
+            <div class="pull-right form-inline">
+                <div class="btn-group">
+                    <button class="btn btn-info btn-sm" data-calendar-nav="prev"><< Poprzedni</button>
+                    <button class="btn btn-default btn-sm" data-calendar-nav="today">Dziś</button>
+                    <button class="btn btn-info btn-sm" data-calendar-nav="next">Następny >></button>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-warning btn-sm" data-calendar-view="year">Rok</button>
+                    <button class="btn btn-warning btn-sm active" data-calendar-view="month">Miesiąc</button>
+                    <button class="btn btn-warning btn-sm" data-calendar-view="week">Tydzień</button>
+                    <button class="btn btn-warning btn-sm" data-calendar-view="day">Dzień</button>
+                </div>
+            </div>
+            <h1>Zabiegi</h1>
+            <h3></h3>
+        </header>
+        <div id="calendar"></div>
+        <script>
+            var calendar = $$('#calendar').calendar({
+                language: 'pl-PL',
+                tmpl_path: '/static/tmpls/',
+                events_source: '/events.json',
+                onAfterViewLoad: function(view)
+                {
+                    $$('.page-header h3').text(this.getTitle());
+                    $$('.btn-group button[data-calendar-view]').removeClass('active');
+                    $$('button[data-calendar-view="' + view + '"]').addClass('active');
+                },
+
+                classes:
+                {
+                    months:
+                    {
+                        general: 'label'
+                    }
+                },
+
+                modal: '#modal',
+            });
+
+            $$('.btn-group button[data-calendar-nav]').click(function()
+            {
+                calendar.navigate($$(this).data('calendar-nav'));
+            });
+
+            $$('.btn-group button[data-calendar-view]').click(function()
+            {
+                calendar.view($$(this).data('calendar-view'));
+            });
+        </script>
+        <footer>
+        </footer>
+    </article>
+</div>

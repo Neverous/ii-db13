@@ -1,0 +1,53 @@
+Ogrodnik-Sadownik 1.0 Beta
+==========================
+
+OPIS
+----
+
+Ogrodnik-Sadownik jest aplikacją internetową pozwalającą na zarządzanie
+swoimi uprawami. Pozwala ona zdefiniować swoje działki/ogródki a następnie
+umiejscowić (mniej-więcej) swoje uprawy. Aplikacja udostępnia szereg możliwości
+zarządzania uprawami. Można określić jakie zabiegi i kiedy wykonujemy, a także
+kiedy zebrano jakie plony, co później jest pokazywane w postaci ładnego wykresu.
+Z poziomu aplikacji można także zarządzać stanem swojego magazynu - w przypadku
+dodawania plonów automatycznie trafiają one do niego.
+
+WYMAGANIA
+---------
+
+* Python 2.7+
+* web.py (dołączone)
+* flup (na produkcji)
+* Baza Danych (domyślnie SQLite)
+
+INSTALACJA
+----------
+
+Aby zainstalować wystarczy przenieść katalog `app/` w wybrane miejsce, następnie
+skonfigurować do swoich potrzeb korzystając z pliku config.py. Po czym można
+uruchomić testowo korzystając z polecenia
+`python2 site.py -t` co pozwoli na dostęp poprzez adres http://localhost:8080.
+Na serwerze produkcyjnym należy skonfigurować cgi(fastcgi, wsgi, itp) po czym
+uruchamia się aplikację poleceniem
+`python2 site.py`.
+
+ADMINISTRACJA
+-------------
+
+Domyślnie zostało utworzone konto admin/admin. Jak się na nie zaloguje to w menu
+jest dostępna zakładka Admin. Z jej poziomu można wykonywać proste czynności administracyjne.
+Wszystko powinno być oczywiste/proste w obsłudze jedyną funkcją wartą wspomnienia jest
+przełączanie na użytkownika, która pozwala administratorowi udawać konkretnego użytkownika
+i oglądać aplikację z jego perspektywy [zielony przycisk przełącz na w zakładce Admin/Użytkownicy].
+
+UŻYTE TECHNOLOGIE
+-----------------
+
+* Python (http://www.python.org/)
+* SQLite (http://www.sqlite.org/)
+* web.py (http://webpy.org/)
+* Bootstrap (http://getbootstrap.com/)
+* Bootstrap-calendar (http://bootstrap-calendar.azurewebsites.net/)
+* jQuery (http://jquery.com/)
+* flot (http://www.flotcharts.org/)
+* Grafiki PlanetCute z Lostgarden (http://www.lostgarden.com/)

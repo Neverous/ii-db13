@@ -1,0 +1,26 @@
+$def with (content)
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="$:config.SITE_DESCRIPTION" />
+    <meta name="keywords" content="$:config.SITE_KEYWORDS" />
+    <meta name="robots" content="nofollow, noindex, noarchive" />
+
+    <link rel="shortcut icon" href="$get_url('static_view', 'favicon.ico')" />
+    $for file in config.SITE_CSS: <link rel="stylesheet" type="text/css" href="$get_url('static_view', 'css/' + file)" media="screen" />
+
+    $for file in config.SITE_JS: <script src="$get_url('static_view', 'js/' + file)"></script>
+    $:content.get('head')
+    <title>$content.get('title') $:config.SITE_TITLE</title>
+</head>
+<body>
+$for message in session.messages:
+    <article class="alert alert-dismissable alert-$message.get('type')">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        $:message.get('body')
+    </article>
+$clear_messages()$:content
+</body>
+</html>

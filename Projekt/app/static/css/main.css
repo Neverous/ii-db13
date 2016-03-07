@@ -1,0 +1,152 @@
+body
+{
+    padding-top: 50px;
+}
+
+.thumbnail
+{
+    height: 300px;
+}
+
+.thumbnail img
+{
+    max-width: 240px;
+    max-height: 120px;
+    border: 1px solid #000000;
+}
+
+/* GARDEN GRID */
+.garden-grid
+{
+    position: relative;
+    display: block;
+    width: auto;
+    height: auto;
+    clear: both;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    overflow: hidden;
+    max-height: 254px;
+}
+
+.garden-grid>.garden-row
+{
+    position: relative;
+    display: block;
+    float: left;
+    width: auto;
+    clear: both;
+    white-space: nowrap;
+    height: 34px;
+    margin-top: -18px;
+}
+
+.garden-grid>.garden-row:first-child
+{
+    margin-top: 0;
+}
+
+.garden-grid>.garden-row>.garden-cell-background
+{
+    position: relative;
+    display: inline-block;
+    background: url('../img/ground.png') no-repeat;
+    background-size: 100%;
+    width: 16px;
+    height: 34px;
+    padding: 10px 0 8px 0;
+}
+
+.garden-grid>.garden-row>.garden-cell-background>.garden-cell
+{
+    position: relative;
+    display: block;
+    margin: 0 auto;
+    text-align: center;
+    z-index: 5;
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+}
+
+.garden-grid>.garden-row>.garden-cell-background>.garden-cell.select
+{
+    background: url('../img/select.png') no-repeat;
+    background-size: 100%;
+}
+
+.garden-grid>.garden-row>.garden-cell-background>.garden-cell.hover
+{
+    background: url('../img/hover.png') no-repeat;
+    background-size: 100%;
+}
+
+.garden-grid>.garden-row>.garden-cell-background.grass
+{
+    background: url('../img/grass.png') no-repeat;
+    background-size: 100%;
+}
+
+.garden-grid>.garden-row>.garden-cell-background.grass>.garden-cell>.plant
+{
+    width: 4px;
+    height: 7px;
+    margin-top: -3px;
+    background: url('../img/plant.png') no-repeat;
+    background-size: 100%;
+    display: block;
+    float: left;
+}
+
+@media (min-width: 768px)
+{
+
+    .thumbnail img
+    {
+        max-width: 290px;
+        max-height: 145px;
+    }
+
+    .navbar-form input
+    {
+        width: 100px !important;
+    }
+
+    .garden-grid
+    {
+        max-height: 945px;
+    }
+
+    .garden-grid>.garden-row
+    {
+        height: 135px;
+        margin-top: -71px;
+    }
+
+    .garden-grid>.garden-row>.garden-cell-background
+    {
+        width: 64px;
+        height: 135px;
+        padding: 39px 0 32px 0;
+    }
+
+    .garden-grid>.garden-row>.garden-cell-background>.garden-cell
+    {
+        width: 64px;
+        height: 64px;
+        line-height: 64px;
+    }
+
+    .garden-grid>.garden-row>.garden-cell-background.grass>.garden-cell>.plant
+    {
+        width: 16px;
+        height: 27px;
+        margin-top: -9px;
+    }
+}
+

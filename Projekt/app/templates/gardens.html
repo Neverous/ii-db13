@@ -1,0 +1,54 @@
+$def with (gardens)
+$var id: gardens
+$var title: Twoje ogrody -
+<div class="container">
+    <article>
+        <header class="page-header">
+            <h1>Twoje ogrody</h1>
+        </header>
+        <section class="row">
+            $for garden in gardens:
+                <article class="col-sm-6 col-md-4" id="ogrod$garden.garden_id">
+                    <div class="thumbnail">
+                        <img src="$get_url('garden_thumbnail_view', garden.garden_id)" alt="$garden.name" />
+                        <header class="caption">
+                            <h3>$garden.name</h3>
+                        </header>
+                        <form class="form-horizontal" role="login" method="POST" action="$get_url('gardens_view')">
+                            <input name="token" type="hidden" value="$session.token" />
+                            <input name="action" type="hidden" value="remove" />
+                            <input name="garden_id" type="hidden" value="$garden.garden_id" />
+                            <p>Utworzony: $garden.creation_date</p>
+                            <p>
+                                <a href="$get_url('garden_view', garden.garden_id)" class="btn btn-default" role="button">Przejdź <span class="glyphicon glyphicon-arrow-right"></span></a>
+                                <button type="submit" class="btn btn-default">Usuń <span class="glyphicon glyphicon-remove"></span></button>
+                            </p>
+                        </form>
+                    </div>
+                </article>
+            <article class="col-sm-6 col-md-4" id="ogrod-new">
+                <div class="thumbnail">
+                    <header class="caption">
+                        <h3>Nowy ogród</h3>
+                    </header>
+                    <form class="form-horizontal" role="login" method="POST" action="$get_url('garden_add_view')">
+                        <input name="token" type="hidden" value="$session.token" />
+                        <section class="form-group">
+                            <label for="name" class="col-sm-2 control-label">Nazwa ogrodu</label>
+                            <div class="col-sm-10">
+                                <input name="name" type="text" class="form-control" id="name" placeholder="Nazwa ogrodu" required="required" />
+                            </div>
+                        </section>
+                        <section class="form-group">
+                            <div class="col-sm-offset-2 col-sm-2">
+                                <button type="submit" class="btn btn-default">Dodaj <span class="glyphicon glyphicon-arrow-right"></span></button>
+                            </div>
+                        </section>
+                    </form>
+                </div>
+            </article>
+        </section>
+        <footer>
+        </footer>
+    </article>
+</div>

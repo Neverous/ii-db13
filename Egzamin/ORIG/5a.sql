@@ -1,0 +1,8 @@
+CREATE TABLE kontakt
+(
+    kod_nad INTEGER REFERENCES uz ON DELETE CASCADE,
+    kod_odb INTEGER REFERENCES uz ON DELETE SET NULL,
+    tresc   TEXT NOT NULL,
+    czas    TIMESTAMP DEFAULT NOW(),
+    PRIMARY KEY (kod_nad, czas)
+);

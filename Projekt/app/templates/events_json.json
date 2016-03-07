@@ -1,0 +1,15 @@
+$def with (events)
+{
+    "success": 1,
+    "result": [
+        $for event in events:
+            {
+                "id": $event.event_id,
+                "title": "$event.name",
+                "url": "$get_url(u'event_view', event.event_id)",
+                "class": "event-${event.ok and u'success' or u'warning'}",
+                "start": $event.start,
+                "end": $event.end
+            }${loop.last and ' ' or ','}
+    ]
+}

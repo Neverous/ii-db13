@@ -1,0 +1,70 @@
+$def with (content)
+$code:
+    def active(*name):
+        if content.id in name:
+            return u'active'
+
+        return u''
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="$:config.SITE_DESCRIPTION" />
+    <meta name="keywords" content="$:config.SITE_KEYWORDS" />
+    <meta name="robots" content="nofollow, noindex, noarchive" />
+
+    <link rel="shortcut icon" href="$get_url(u'static_view', u'favicon.ico')" />
+    $for file in config.SITE_CSS: <link rel="stylesheet" type="text/css" href="$get_url(u'static_view', u'css/' + file)" media="screen" />
+
+    $for file in config.SITE_JS: <script src="$get_url(u'static_view', u'js/' + file)"></script>
+    $:content.get(u'head')
+    <title>$content.get(u'title') $:config.SITE_TITLE</title>
+</head>
+<body>
+<section class="container">
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="container">
+            <section class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="$get_url(u'index_view')">$config.SITE_TITLE</a>
+            </section>
+            <section class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li class="$active(u'admin_users')"><a href="$get_url(u'admin_users_view')" title="Użytkownicy">Użytkownicy</a></li>
+                    <li class="$active(u'admin_gardens')"><a href="$get_url(u'admin_gardens_view')" title="Ogrody">Ogrody</a></li>
+                    <li class="$active(u'admin_placements')"><a href="$get_url(u'admin_placements_view')" title="Uprawy">Uprawy</a></li>
+                    <li class="$active(u'admin_events')"><a href="$get_url(u'admin_events_view')" title="Zabiegi">Zabiegi</a></li>
+                    <li class="$active(u'admin_plants')"><a href="$get_url(u'admin_plants_view')" title="Rośliny">Rośliny</a></li>
+                    <li class="$active(u'admin_products')"><a href="$get_url(u'admin_products_view')" title="Produkty">Produkty</a></li>
+                    <li class="$active(u'admin_shops')"><a href="$get_url(u'admin_shops_view')" title="Sklepy">Sklepy</a></li>
+                    <li class="$active(u'admin_warehouse_products')"><a href="$get_url(u'admin_warehouse_products_view')" title="Magazyny">Magazyny</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="$get_url(u'index_view')" title="Wyjdź"><span class="glyphicon glyphicon-log-out"></span> Wyjdź</a></li>
+                </ul>
+            </section>
+        </div>
+    </nav>
+    $for message in session.messages:
+        <article class="alert alert-dismissable alert-$message.get(u'type')">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            $:message.get(u'body')
+        </article>
+    $clear_messages()$:content
+</section>
+<section class="modal fade" id="modal" role="dialog">
+    <article class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+            </div>
+        </div>
+    </article>
+</section>
+</body>
+</html>

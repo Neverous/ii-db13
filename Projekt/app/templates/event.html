@@ -1,0 +1,90 @@
+$def with (products, event_id, event_name, event_description, from_date, to_date, end_date, frequency, placement_id, placement_name, plant_name, required_products)
+$var id: events
+$var title: $event_name - Zabieg -
+<div class="container">
+    <article>
+        <header class="page-header">
+            <form action="" method="POST" class="form-inline">
+                <input type="hidden" name="action" value="remove" />
+                <input type="hidden" name="token" value="$session.token" />
+                <button type="submit" class="pull-right btn btn-sm btn-danger">Usuń</button>
+            </form>
+            <h1>$event_name - Zabieg</h1>
+            <h3>na <a href="$get_url(u'placement_view', placement_id)">$placement_name</a>/$plant_name</h3>
+            <em>
+                Od $from_date.strftime('%Y-%m-%d %H:%M') do $to_date.strftime('%Y-%m-%d %H:%M')
+                $if frequency:
+                    Powtarzając co $frequency tydzień, kończąc $end_date.date()
+            </em>
+        </header>
+        <form action="" method="POST" class="form-inline">
+            <input type="hidden" name="action" value="edit" />
+            <input type="hidden" name="token" value="$session.token" />
+            <textarea name="event_description" style="width: 100%;">$event_description</textarea>
+            <button type="submit" class="btn btn-success btn-sm pull-right" title="Edytuj">Edytuj</button>
+        </form>
+        <p><br /></p>
+        <h4>Wymagane produkty</h4>
+        <table class="table table-hover table-condensed" id="products">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">#</th>
+                    <th>Nazwa</th>
+                </tr>
+            </thead>
+<tbody>
+<tr>
+    <td></td>
+    <td>
+        <form action="" method="POST" class="form-inline">
+            <input type="hidden" name="action" value="add_req" />
+            <input type="hidden" name="token" value="$session.token" />
+            <input type="hidden" name="product_id" id="product_id" />
+            <button type="submit" class="pull-right btn btn-sm btn-primary">Dodaj <span class="glyphicon glyphicon-plus"></span></button>
+            <input type="text" name="product_name" placeholder="Nazwa produktu" class="input-sm" id="product_name" class="form-control" required="required" />
+        </form>
+        <script>
+            var product_id      = $$('#product_id');
+            var product_name    = $$('#product_name');
+            product_name.autocomplete({
+                source: [
+                    $for product in products:
+                        {label: '$product.name', value: '$product.product_id'},
+                ],
+
+                select: function(ev, ui)
+                {
+                    ev.preventDefault();
+                    product_id.val(ui.item.value);
+                    product_name.val(ui.item.label);
+                },
+
+                focus: function(ev, ui)
+                {
+                    ev.preventDefault();
+                    product_id.val(ui.item.value);
+                    product_name.val(ui.item.label);
+                }
+            });
+        </script>
+    </td>
+</tr>
+$for product in required_products:
+    <tr$:{product.available and ' ' or ' class="bg-warning" title="Brak w magazynie" data-toggle="tooltip"'}>
+        <td>$loop.index</td>
+        <td>
+            <form action="" method="POST" class="form-inline">
+                <button type="submit" class="pull-right btn btn-sm btn-danger">Usuń</button>
+                $product.name
+                <input type="hidden" name="token" value="$session.token" />
+                <input type="hidden" name="action" value="rem_req" />
+                <input type="hidden" name="product_id" value="$product.product_id" />
+            </form>
+        </td>
+    </tr>
+</tbody>
+</table>
+        <footer>
+        </footer>
+    </article>
+</div>
